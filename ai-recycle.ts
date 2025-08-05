@@ -55,7 +55,32 @@ namespace ai_recycle {
     export function onAgentRun(handler: () => void) {
         userAgentCode = handler;
         refreshRecycleOptions();
-        runTraining();
+
+        let existingTraining;
+        try {
+            existingTraining = settings.readJSON("training") as { [key: string]: string[] };
+        } catch {
+            // Ignore
+        }
+
+        console.log(existingTraining);
+
+        let useExisting = false;
+        if (existingTraining && existingTraining["sodaCan"].length && existingTraining["note"].length && existingTraining["waterBottle"].length) {
+            let response = game.ask("Use existing training?", "Or press B to re-train")
+            if (response) {
+                classificationBuckets = existingTraining;
+                useExisting = true;
+            } else {
+                settings.clear()
+            }
+        }
+
+        if (useExisting) {
+            runTrial();
+        } else {
+            runTraining();
+        }
     }
 
     /**
@@ -170,6 +195,9 @@ namespace ai_recycle {
         if (sampleCount < CLASSIFICATION_STEPS) {
             showTrainingOption()
         } else {
+            // TODO thsparks : save as setting?
+            settings.writeJSON("training", classificationBuckets);
+
             runTrial()
         }
     }
