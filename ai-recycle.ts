@@ -1,5 +1,7 @@
 /* TO DO LIST
- * Picture based "thinking" and "error" states - thought bubbles for robot
+ * - Picture based (no translation) "thinking" and "error" states - thought bubbles for robot
+ * - Animation for when you classify an item, maybe show running status of what's "paper" what's "metal" and what's "plastic"
+ * - Different possible sprites for paper, metal, and plastic options so they aren't all identical
  */
 
 //% weight=100
@@ -47,9 +49,12 @@ namespace ai_recycle {
     };
     let robotState: RobotState = {};
 
+    /*********************************
+     * BLOCKS
+     *********************************/
 
     /**
-     * Defines behavior for our robot
+     * Defines behavior for Binnie the RecycleBot
      */
     //% block="On RecycleBot run"
     export function onAgentRun(handler: () => void) {
@@ -62,8 +67,6 @@ namespace ai_recycle {
         } catch {
             // Ignore
         }
-
-        console.log(existingTraining);
 
         let useExisting = false;
         if (existingTraining && existingTraining["sodaCan"].length && existingTraining["note"].length && existingTraining["waterBottle"].length) {
@@ -92,7 +95,7 @@ namespace ai_recycle {
     }
 
     /**
-     * Tells the RecycleBot to go to the nearest trash
+     * Tells Binnie to go to the nearest recyclable item
      */
     //% block="Pick up recyclable item"
     export function goToItem(): void {
@@ -126,7 +129,7 @@ namespace ai_recycle {
     }
 
     /**
-     * Sorts the recyclable based on the classification data you input
+     * Sorts the item Binnie is holding based on the classification data you input
      */
     //% block="Classify item in hand"
     export function classifyItem(): void {
@@ -146,7 +149,7 @@ namespace ai_recycle {
     }
 
     /**
-     * Goes to the bin based on the classification the robot selected
+     * Goes to the bin based on the classification Binnie selected
      */
     //% block="Put item in chosen bin"
     export function goToBin(): void {
@@ -181,26 +184,17 @@ namespace ai_recycle {
         robotState = {};
     }
 
+    /*********************************
+     * UTIL
+     *********************************/
+
     function refreshRecycleOptions() {
         recycleOptions = ["sodaCan", "note", "waterBottle"]
     }
 
-    function classifySample(choice: string) {
-        if (!(classificationBuckets[sampleType])) {
-            classificationBuckets[sampleType] = []
-        }
-        classificationBuckets[sampleType].push(choice)
-        sprites.destroy(sampleSprite)
-        sampleCount += 1
-        if (sampleCount < CLASSIFICATION_STEPS) {
-            showTrainingOption()
-        } else {
-            // TODO thsparks : save as setting?
-            settings.writeJSON("training", classificationBuckets);
-
-            runTrial()
-        }
-    }
+    /*********************************
+     * TRAINING
+     *********************************/
 
     function runTraining() {
         showTrainingOption()
@@ -233,6 +227,25 @@ namespace ai_recycle {
         })
     }
 
+    function classifySample(choice: string) {
+        if (!(classificationBuckets[sampleType])) {
+            classificationBuckets[sampleType] = []
+        }
+        classificationBuckets[sampleType].push(choice)
+        sprites.destroy(sampleSprite)
+        sampleCount += 1
+        if (sampleCount < CLASSIFICATION_STEPS) {
+            showTrainingOption()
+        } else {
+            settings.writeJSON("training", classificationBuckets);
+            runTrial()
+        }
+    }
+
+    /*********************************
+     * TRIAL
+     *********************************/
+
     function runTrial() {
         controller.left.onEvent(ControllerButtonEvent.Pressed, function () { })
         controller.right.onEvent(ControllerButtonEvent.Pressed, function () { })
@@ -255,11 +268,11 @@ namespace ai_recycle {
         robotSprite.setPosition(scene.screenWidth() / 2, scene.screenHeight() / 2 + 10);
 
         refreshRecycleOptions();
-        spawnRecycleItem();
+        spawnRecycleItems();
         userAgentCode();
     }
 
-    function spawnRecycleItem() {
+    function spawnRecycleItems() {
         // Clear any existing classification.
         robotState = {};
 
