@@ -192,6 +192,35 @@ namespace ai_recycle {
         recycleOptions = ["sodaCan", "note", "waterBottle"]
     }
 
+    function getSpriteOfType(t: itemType): RecycleSprite {
+        // For some reason having this at the root level results in assets not resolving.
+        let itemImages: { [key: string]: Image[] } = {
+            "sodaCan": [
+                assets.image`sodaCan`,
+                assets.image`sodaCan0`,
+                assets.image`sodaCan1`,
+                assets.image`sodaCan2`,
+            ],
+            "note": [
+                assets.image`note`,
+                assets.image`note0`,
+                assets.image`note1`,
+                assets.image`note2`,
+            ],
+            "waterBottle": [
+                assets.image`waterBottle`,
+                assets.image`waterBottle0`,
+                assets.image`waterBottle1`,
+                assets.image`waterBottle2`,
+            ]
+        }
+
+        const img = itemImages[t]._pickRandom();
+        const spr = sprites.create(img, SpriteKind.Food) as RecycleSprite;
+        spr.itemType = t;
+        return spr;
+    }
+
     /*********************************
      * TRAINING
      *********************************/
@@ -207,13 +236,7 @@ namespace ai_recycle {
         if (recycleOptions.length == 0) {
             refreshRecycleOptions();
         }
-        if (sampleType == "sodaCan") {
-            sampleSprite = sprites.create(assets.image`sodaCan`, SpriteKind.Food)
-        } else if (sampleType == "note") {
-            sampleSprite = sprites.create(assets.image`note`, SpriteKind.Food)
-        } else {
-            sampleSprite = sprites.create(assets.image`waterBottle`, SpriteKind.Food)
-        }
+        sampleSprite = getSpriteOfType(sampleType);
         sampleSprite.setPosition(80, 40)
 
         controller.left.onEvent(ControllerButtonEvent.Pressed, function () {
@@ -278,17 +301,7 @@ namespace ai_recycle {
 
         for (let i = 0; i < RECYCLABLES_TO_SORT; i++) {
             const newItemType = recycleOptions._pickRandom()
-
-            let newItem: RecycleSprite;
-            if (newItemType == "sodaCan") {
-                newItem = sprites.create(assets.image`sodaCan`, SpriteKind.Food) as RecycleSprite;
-            } else if (newItemType == "note") {
-                newItem = sprites.create(assets.image`note`, SpriteKind.Food) as RecycleSprite;
-            } else {
-                newItem = sprites.create(assets.image`waterBottle`, SpriteKind.Food) as RecycleSprite;
-            }
-
-            newItem.itemType = newItemType;
+            let newItem = getSpriteOfType(newItemType);
             newItem.setPosition(randint(20, scene.screenWidth() - 20), randint(20, scene.screenHeight() / 2 - 10));
             recyclableItems.push(newItem);
         }
